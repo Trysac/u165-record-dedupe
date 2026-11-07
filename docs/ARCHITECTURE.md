@@ -1,29 +1,11 @@
 # Architecture
 
-## Purpose
+`record_dedupe` provides bounded, deterministic entity resolution and duplicate record detection on structured data.
 
-`trysac-record-dedupe` is a small, dependency-free Python library: Find duplicate records with weighted fuzzy field rules: Jaro-Winkler, Levenshtein, exact and numeric tolerance, blocking keys, union-find clusters and survivorship merge
+## Pipeline
 
-## Shape
-
-```text
-caller code --> record_dedupe (public API in __init__.py)
-                    |
-                    +-- pure functions, no I/O, no global state
-```
-
-- **Public API**: the names listed in `__all__` of `src/record_dedupe/__init__.py`. Anything else is
-  internal and may change without a major version.
-- **Errors**: invalid input raises built-in exceptions (`ValueError`, `TypeError`) with a clear
-  message; the library never prints or exits.
-- **Side effects**: none. If a feature needs I/O, isolate it in its own module behind a small
-  interface and record the choice in an ADR.
-
-## Quality contract
-
-`scripts/check.py` is the single definition of the gates; `fabrica.json` tells the factory and CI
-how to run it. See [TESTING.md](TESTING.md).
-
-## Decisions
-
-Architecture decisions are recorded in [decisions/](decisions/) as numbered ADRs.
+1. **Validation & Configuration**: `DedupeConfig` checks rule specifications, weights, tolerances, and bounds.
+2. **Blocking**: Partitions records by normalized blocking keys (`casefold`). Any record missing a blocking key is skipped. If no blocking keys are provided, the dataset forms a single block subject to `max_block_size`.
+3. **Pairwise Comparison**: Within blocks, candidate pairs `(i, j)` with `i < j` are compared. Normalized field similarities are evaluated across matching rules; missing fields are excluded from both numerator and denominator.
+4. **Clustering**: Matched pairs above `threshold` are grouped using a disjoint-set (union-find) data structure with path compression.
+5. **Survivorship Merging**: Clusters can be merged via `merge_cluster`, which preserves field order and chooses the first non-empty, non-`None` value in cluster order.

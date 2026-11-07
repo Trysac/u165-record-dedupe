@@ -2,18 +2,14 @@
 
 ## Threat model
 
-`trysac-record-dedupe` is a pure library without I/O. The main risks are:
+`record-dedupe` is a pure Python library without I/O operations, reducing the attack surface significantly. 
 
-- **Supply chain**: a compromised dependency or CI action. Mitigation: no runtime dependencies,
-  Dependabot weekly updates, actions pinned to major versions, minimal workflow permissions.
-- **Leaked secrets**: tokens committed by mistake. Mitigation: `gitleaks` runs in the local gates
-  and in CI; `.env` files are git-ignored.
-- **Untrusted input**: callers may pass hostile strings. Mitigation: validate input and fail with
-  explicit exceptions; never `eval`, `exec` or deserialize untrusted data.
+### Defended
 
-## Publishing
+- **Configurational Errors**: Explicit validation is performed in `DedupeConfig.__post_init__` to prevent invalid states, such as threshold overflows or excessive rule counts, raising `DedupeError`.
+- **Resource Exhaustion**: The library limits resource usage via `max_records` (default 50,000) and `max_block_size` (default 1,000). Requests exceeding these bounds raise `DedupeError` with the appropriate machine-readable code.
 
-Releases are published to PyPI with trusted publishing (OIDC) when available, never with a
-long-lived token stored in the repository.
+### Not defended
 
-To report a vulnerability, see [SECURITY.md](../SECURITY.md).
+- **Hostile Input**: Callers may pass arbitrary strings. The library assumes the caller validates data or handles potential `DedupeError` exceptions. 
+- **Supply chain**: While we maintain zero runtime dependencies to minimize exposure, the library relies on standard supply chain practices (e.g., dependency updates, pinned actions).

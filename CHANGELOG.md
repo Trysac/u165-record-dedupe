@@ -9,4 +9,5 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- Add structured record deduplication with weighted fuzzy rules, blocking, union-find clustering, and cluster merging
 - Initial project structure from the factory utility template.

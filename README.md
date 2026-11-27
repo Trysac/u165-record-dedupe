@@ -4,8 +4,10 @@ CRM exports, supplier lists, and sign-up tables often contain duplicate entries 
 
 ## Installation
 
+Not published to PyPI yet. Install it from GitHub:
+
 ```bash
-pip install record-dedupe
+pip install "git+https://github.com/Trysac/u165-record-dedupe"
 ```
 
 ## Usage
